@@ -1,10 +1,6 @@
 from .base import *
 import dj_database_url
 
-MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware'
-]
-
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
