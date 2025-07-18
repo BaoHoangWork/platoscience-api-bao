@@ -9,6 +9,10 @@ class BaseService:
     def get_by_id(self, pk: int):
         """Lấy một bản ghi theo ID."""
         return self.repository.get_by_id(pk)
+    
+    def filter(self, **kwargs):
+        """Lọc các bản ghi theo điều kiện."""
+        return self.repository.filter(**kwargs)
 
     def create(self, **kwargs):
         """Tạo một bản ghi mới."""

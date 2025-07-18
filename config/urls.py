@@ -17,12 +17,23 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from apps.users.views.account_view import AccountView, LoginView, LogoutView
+from apps.assessments.views.assessment_view import AssessmentView
+from apps.users.views.user_view import UserView, LoginView, LogoutView, UpdateUserPasswordView
+from apps.users.views.email_view import VerifyEmailView, ResendVerificationView, ForgotPasswordView, VerifyForgotPasswordCodeView
+from apps.assessments.views.assessment_view import AssessmentView, LatestAssessmentView, CheckTimeIntervalView
 
 api_patterns = [
-    path('accounts/', AccountView.as_view(), name='account'),
+    path('accounts/', UserView.as_view(), name='account'),
     path('auth/login/', LoginView.as_view(), name='login'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
+    path('verify-email/', VerifyEmailView.as_view(), name='verify-email'),
+    path('resend-verification/', ResendVerificationView.as_view(), name='resend-verification'),
+    path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
+    path('verify-forgot-password-code/', VerifyForgotPasswordCodeView.as_view(), name='verify-forgot-password-code'),
+    path('update-password/', UpdateUserPasswordView.as_view(), name='update-password'),
+    path('assessments/', AssessmentView.as_view(), name='assessment'),
+    path('assessments/latest/', LatestAssessmentView.as_view(), name='latest-assessment'),
+    path('check-time-interval/', CheckTimeIntervalView.as_view(), name='check-time-interval')
 ]
 
 urlpatterns = [
