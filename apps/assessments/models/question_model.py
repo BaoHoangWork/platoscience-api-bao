@@ -11,7 +11,10 @@ class Question(models.Model):
         ('phq9', 'PHQ'),
         ('bdi', 'BDI'),
         ('normal', 'Normal'),
+<<<<<<< HEAD
         ('analytic', 'Analytic'),
+=======
+>>>>>>> 3641a70 (update question model and swagger)
     ]
     
     name = models.CharField(max_length=255, unique=True)
