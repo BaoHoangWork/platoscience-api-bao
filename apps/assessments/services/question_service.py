@@ -10,6 +10,8 @@ class QuestionService(BaseService):
         try:
             questions = []
             for answer in  answers_data:
+                if not answer.get("selected_option"):
+                    continue 
                 matching_question = self.filter(category=requested_category, id=answer.get("question").id)
                 if matching_question:
                     if requested_category=="text" or requested_category=="analytic":
