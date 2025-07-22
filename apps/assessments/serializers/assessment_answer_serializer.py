@@ -23,7 +23,8 @@ class CreateAssessmentAnswerSerializer(serializers.ModelSerializer):
     assessment = serializers.PrimaryKeyRelatedField(read_only=True)
     selected_option = serializers.PrimaryKeyRelatedField(
         queryset=QuestionOption.objects.all(),
-        write_only=True
+        write_only=True,
+        allow_null=True
     )
 
     class Meta:

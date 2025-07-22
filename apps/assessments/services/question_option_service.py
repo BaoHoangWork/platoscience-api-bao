@@ -9,6 +9,8 @@ class QuestionOptionService(BaseService):
     def validate(self, data):
         question = data.get("question")
         selected_option = data.get("selected_option")
+        if not selected_option:
+            return
         valid_option_question = self.repository.filter(question_id=question.id, id=selected_option.id)
         if not valid_option_question:
             raise ValueError(

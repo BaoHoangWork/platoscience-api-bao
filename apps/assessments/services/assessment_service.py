@@ -33,6 +33,8 @@ class AssessmentService(BaseService):
     def create_with_answer(self, assessment_data, user):
         answers_data = assessment_data.pop("answers", [])
         
+        print(answers_data)
+        
         # Calculate PHQ and BDI scores
         phq_questions = QuestionService().group_questions_by_category(requested_category="phq", answers_data=answers_data)
         bdi_questions = QuestionService().group_questions_by_category(requested_category="bdi", answers_data=answers_data)
@@ -65,7 +67,7 @@ class AssessmentService(BaseService):
                 f"Validation Error: {response.text}"
             )
         except Exception as e:
-            raise Exception(f"Error retrieving plato_score and severity: {str(e)}")
+            raise Exception(f"Error retrieving plato_score and severity with score PHQ-9 ({phq_score}) and BDI-II ({bdi_score}): {str(e)}")
 
         try:
             with transaction.atomic():
