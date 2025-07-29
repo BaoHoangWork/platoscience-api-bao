@@ -5,11 +5,16 @@ class Question(models.Model):
         ('text', 'Text Input'),
         ('radio', 'Radio Button'),
         ('select', 'Dropdown Select'),
-        ('checkbox', 'Checkbox'),
+    ]
+    
+    QUESTION_CATEGORIES = [
+        ('phq9', 'PHQ'),
+        ('bdi', 'BDI'),
+        ('normal', 'Normal'),
     ]
     
     name = models.CharField(max_length=255, unique=True)
     content = models.TextField()
     description = models.TextField(blank=True, null=True)
-    category = models.CharField(max_length=255, blank=True, null=True)
+    category = models.CharField(max_length=50, choices=QUESTION_CATEGORIES, default='normal')
     type = models.CharField(max_length=20, choices=QUESTION_TYPES, default='text')

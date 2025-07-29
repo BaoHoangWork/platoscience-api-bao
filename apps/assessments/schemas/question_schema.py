@@ -14,27 +14,29 @@ question_list_schema = extend_schema(
                     value=[
                         {
                             "id": 1,
-                            "name": "Math Question",
+                            "name": "BDI Question",
                             "content": "What is 2 + 2?",
                             "description": "A basic math question.",
-                            "category": "Math",
+                            "category": "phq",
                             "options": [
-                                {"id": 1, "content": "3", "is_correct": False},
-                                {"id": 2, "content": "4", "is_correct": True},
-                                {"id": 3, "content": "5", "is_correct": False}
-                            ]
+                                {"id":1, "label": "A", "value": "4"},
+                                {"id":2, "label": "B", "value": "3"},
+                                {"id":3, "label": "C", "value": "5"}
+                            ],
+                            "type": "radio"
                         },
                         {
                             "id": 2,
-                            "name": "Science Question",
+                            "name": "PHQ Question",
                             "content": "What is the chemical symbol for water?",
                             "description": "A basic science question.",
-                            "category": "Science",
+                            "category": "phq",
                             "options": [
-                                {"id": 4, "content": "H2O", "is_correct": True},
-                                {"id": 5, "content": "CO2", "is_correct": False},
-                                {"id": 6, "content": "O2", "is_correct": False}
-                            ]
+                                {"id":1, "label": "A", "value": "H2O"},
+                                {"id":2, "label": "B", "value": "CO2"},
+                                {"id":3, "label": "C", "value": "O2"}
+                            ],
+                            "type": "select"
                         }
                     ]
                 )
