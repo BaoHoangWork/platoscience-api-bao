@@ -119,6 +119,12 @@ create_assessment_schema = extend_schema(
                         "answer": "answer 3",
                         "selected_option": 18,
                         "index": 3
+                    },
+                    {
+                    "question": 11,
+                    "answer": "The individual experiences persistent low mood, fatigue, and a lack of motivation. They report difficulty concentrating, disrupted sleep patterns, and irregular eating habits. Although still able to function in daily life, tasks feel overwhelmingly difficult and emotionally draining. There is significant social withdrawal, feelings of guilt, and recurring intrusive thoughts that contribute to a sense of hopelessness. Emotional numbness alternates with unpredictable episodes of sadness or anxiety. Despite outwardly appearing functional, the internal distress is constant and exhausting.",
+                    "selected_option": None,
+                    "index": 3
                     }
                 ]
             },
@@ -135,18 +141,43 @@ create_assessment_schema = extend_schema(
                     value={
                         "status": "success",
                         "message": "Asessment created successfully",
+                        "depression_type": "None",
+                        "analysis": "The individual reports a constellation of symptoms including persistent low mood, fatigue, lack of motivation, difficulty concentrating, disrupted sleep, irregular eating habits, social withdrawal, feelings of guilt, recurring intrusive thoughts, hopelessness, emotional numbness, and unpredictable episodes of sadness or anxiety. These symptoms cause significant distress and make daily tasks feel overwhelmingly difficult and emotionally draining, although the individual is still able to function. The symptoms described do not clearly align with a specific duration, making it difficult to definitively diagnose Major Depressive Disorder (at least two weeks) or Persistent Depressive Disorder (at least two years in adults). Further questioning about the duration and specific triggers or causes is needed to differentiate between possible diagnoses.",
                         "assessment": {
-                            "id": 213,
+                            "id": 252,
                             "phq_score": 4,
                             "bdi_score": 3,
                             "plato_score": 30.7,
-                            "protocol": "null",
+                            "protocol": None,
                             "severity": 1,
                             "answers": [
                             {
-                                "id": 367,
-                                "assessment": 213,
-                                "question": 5,
+                                "id": 486,
+                                "assessment": 252,
+                                "question": {
+                                    "name": "bdi_q1",
+                                    "content": "I do not feel sad / I feel sad / I am sad all the time",
+                                    "description": "BDI Question 1",
+                                    "category": "bdi",
+                                    "options": [
+                                        {
+                                            "id": 2,
+                                            "label": "Option A - Q5",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "id": 3,
+                                            "label": "Option B - Q5",
+                                            "value": "2"
+                                        },
+                                        {
+                                            "id": 4,
+                                            "label": "Option C - Q5",
+                                            "value": "3"
+                                        }
+                                    ],
+                                    "type": "radio"
+                                },
                                 "answer": "answer 1",
                                 "selected_option": {
                                     "id": 4,
@@ -156,21 +187,67 @@ create_assessment_schema = extend_schema(
                                 "index": 0
                             },
                             {
-                                "id": 368,
-                                "assessment": 213,
-                                "question": 9,
+                                "id": 487,
+                                "assessment": 252,
+                                "question": {
+                                "name": "phq_q2",
+                                "content": "Feeling down, depressed, or hopeless?",
+                                "description": "PHQ Question 2",
+                                "category": "phq",
+                                "options": [
+                                    {
+                                        "id": 14,
+                                        "label": "Option A - Q9",
+                                        "value": "1"
+                                    },
+                                    {
+                                        "id": 15,
+                                        "label": "Option B - Q9",
+                                        "value": "2"
+                                    },
+                                    {
+                                        "id": 16,
+                                        "label": "Option C - Q9",
+                                        "value": "3"
+                                    }
+                                ],
+                                "type": "radio"
+                                },
                                 "answer": "answer 2",
                                 "selected_option": {
                                     "id": 15,
                                     "label": "Option B - Q9",
                                     "value": "2"
-                                },
+                                    },
                                 "index": 3
                             },
                             {
-                                "id": 369,
-                                "assessment": 213,
-                                "question": 10,
+                                "id": 488,
+                                "assessment": 252,
+                                "question": {
+                                    "name": "phq_q3",
+                                    "content": "Trouble falling or staying asleep?",
+                                    "description": "PHQ Question 3",
+                                    "category": "phq",
+                                    "options": [
+                                        {
+                                        "id": 17,
+                                        "label": "Option A - Q10",
+                                        "value": "1"
+                                        },
+                                        {
+                                        "id": 18,
+                                        "label": "Option B - Q10",
+                                        "value": "2"
+                                        },
+                                        {
+                                        "id": 19,
+                                        "label": "Option C - Q10",
+                                        "value": "3"
+                                        }
+                                    ],
+                                    "type": "checkbox"
+                                },
                                 "answer": "answer 3",
                                 "selected_option": {
                                     "id": 18,
@@ -178,10 +255,25 @@ create_assessment_schema = extend_schema(
                                     "value": "2"
                                 },
                                 "index": 3
+                            },
+                            {
+                                "id": 489,
+                                "assessment": 252,
+                                "question": {
+                                    "name": "analytic 1",
+                                    "content": "The individual experiences persistent low mood, fatigue, and a lack of motivation. They report difficulty concentrating, disrupted sleep patterns, and irregular eating habits. Although still able to function in daily life, tasks feel overwhelmingly difficult and emotionally draining. There is significant social withdrawal, feelings of guilt, and recurring intrusive thoughts that contribute to a sense of hopelessness. Emotional numbness alternates with unpredictable episodes of sadness or anxiety. Despite outwardly appearing functional, the internal distress is constant and exhausting.",
+                                    "description": "The individual experiences persistent low mood, fatigue, and a lack of motivation. They report difficulty concentrating, disrupted sleep patterns, and irregular eating habits. Although still able to function in daily life, tasks feel overwhelmingly difficult and emotionally draining. There is significant social withdrawal, feelings of guilt, and recurring intrusive thoughts that contribute to a sense of hopelessness. Emotional numbness alternates with unpredictable episodes of sadness or anxiety. Despite outwardly appearing functional, the internal distress is constant and exhausting.",
+                                    "category": "analytic",
+                                    "options": [],
+                                    "type": "text"
+                                },
+                                "answer": "The individual experiences persistent low mood, fatigue, and a lack of motivation. They report difficulty concentrating, disrupted sleep patterns, and irregular eating habits. Although still able to function in daily life, tasks feel overwhelmingly difficult and emotionally draining. There is significant social withdrawal, feelings of guilt, and recurring intrusive thoughts that contribute to a sense of hopelessness. Emotional numbness alternates with unpredictable episodes of sadness or anxiety. Despite outwardly appearing functional, the internal distress is constant and exhausting.",
+                                "selected_option": None,
+                                "index": 3
                             }
                             ],
                             "suggested_protocols": [],
-                            "created_at": "2025-07-21T15:26:28.457684Z"
+                            "created_at": "2025-08-01T11:15:43.240486Z"
                         }
                     }
                 )

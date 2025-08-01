@@ -52,20 +52,19 @@ class AssessmentView(APIView):
                     assessment_data=assessment_serializer.validated_data,
                     user=request.user
                 )
-                serializer = AssessmentSerializer(assessment)
+
                 return Response(
                     {
                         'status': 'success',
                         'message': 'Asessment created successfully',
-                        'assessment': serializer.data
+                        "depression_type": assessment["depression_type"],
+                        "analysis": assessment["analysis"],
+                        'assessment': AssessmentSerializer(assessment["assessment"]).data,
                     }, 
                     status=status.HTTP_201_CREATED
                 )
             except Exception as e:
-                return Response(
-                    {'error': str(e)}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(
                 {

@@ -9,7 +9,7 @@ from apps.assessments.services.question_service import QuestionService
 from apps.common.base_service import BaseService
 from django.db import transaction
 import requests
-from apps.common.constants import ASSESSMENT_INTERVAL, AI_BASE_URL
+from apps.common.constants import ASSESSMENT_INTERVAL, AI_BASE_URL, MAX_TOKENS
 
 class AssessmentService(BaseService):
     def __init__(self):
@@ -26,15 +26,28 @@ class AssessmentService(BaseService):
         if not latest_assessment:
             return {"is_valid":True, "next_valid_time": None}  
         now = timezone.now()
-        next_valid_time = latest_assessment.created_at + timedelta(weeks=ASSESSMENT_INTERVAL)
+        next_valid_time = latest_assessment.created_at + timedelta(seconds=ASSESSMENT_INTERVAL)
         is_valid = now >= next_valid_time
         return {"is_valid": is_valid, "next_valid_time": next_valid_time}
 
     def create_with_answer(self, assessment_data, user):
+        """
+        Create a new assessment, save answers, calculate scores,
+        and retrieve depression analysis, plato score and severity via API AI.
+
+        Args:
+            assessment_data (dict): Data containing answers.
+            user (User): The user who is creating the assessment.
+
+        Returns:
+            dict: {
+                "assessment": Assessment instance,
+                "depression_type": str,
+                "analysis": str
+            }
+        """
+
         answers_data = assessment_data.pop("answers", [])
-        
-        print(answers_data)
-        
         # Calculate PHQ and BDI scores
         phq_questions = QuestionService().group_questions_by_category(requested_category="phq", answers_data=answers_data)
         bdi_questions = QuestionService().group_questions_by_category(requested_category="bdi", answers_data=answers_data)
@@ -69,6 +82,29 @@ class AssessmentService(BaseService):
         except Exception as e:
             raise Exception(f"Error retrieving plato_score and severity with score PHQ-9 ({phq_score}) and BDI-II ({bdi_score}): {str(e)}")
 
+        analytic_questions = QuestionService().group_questions_by_category(requested_category="analytic", answers_data=answers_data)
+        
+        try:
+            url = f"{AI_BASE_URL}/analyze-depression/"
+            query = analytic_questions[0]["answer"]
+            payload = {
+                "query": query,
+                "max_tokens": MAX_TOKENS,
+            }
+            headers = {'Content-Type': 'application/json'}
+            response = requests.request("POST", url, headers=headers, json=payload)
+            if response.status_code == 200:
+                data = response.json()
+                depression_type = data.get("depression_type")
+                analysis = data.get("analysis")
+            else:
+                raise ValueError(
+                f"Validation Error: {response.text}"
+            )
+        except Exception as e:
+            raise Exception(f"Error analyze the depression: {str(e)}")
+        
+
         try:
             with transaction.atomic():
                 assessment = self.create(
@@ -82,7 +118,11 @@ class AssessmentService(BaseService):
                 for answer in answers_data:
                     QuestionOptionService().validate(answer)
                     AssessmentAnswerService().create(**answer, assessment=assessment)
-
-                return assessment
+                
+                return {
+                    "assessment" : assessment, 
+                    "depression_type" : depression_type, 
+                    "analysis" : analysis
+                }
         except Exception as e:
             raise Exception(f"Error creating assessment: {str(e)}")
