@@ -22,6 +22,7 @@ from apps.users.views.user_view import UserView, LoginView, LogoutView, UpdateUs
 from apps.users.views.email_view import VerifyEmailView, ResendVerificationView, ForgotPasswordView, VerifyForgotPasswordCodeView
 from apps.assessments.views.assessment_view import AssessmentView, LatestAssessmentView, CheckTimeIntervalView
 from apps.assessments.views.question_view import QuestionView
+from apps.assessments.views.config_view import ConfigView
 
 api_patterns = [
     path('accounts/', UserView.as_view(), name='account'),
@@ -36,6 +37,7 @@ api_patterns = [
     path('assessments/latest/', LatestAssessmentView.as_view(), name='latest-assessment'),
     path('check-time-interval/', CheckTimeIntervalView.as_view(), name='check-time-interval'),
     path('questions/', QuestionView.as_view(), name='question'),
+    path('config/', ConfigView.as_view(), name='config'),
 ]
 
 urlpatterns = [
