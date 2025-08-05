@@ -21,6 +21,11 @@ class AssessmentSerializer(serializers.ModelSerializer):
             'created_at',
         ]
 
+    def get_answers(self, obj):
+        # Filter out check-in answers from regular assessment responses
+        regular_answers = obj.answers.filter(is_checkin=False)
+        return AssessmentAnswerSerializer(regular_answers, many=True).data
+
 class CreateAssessmentSerializer(serializers.ModelSerializer):
     answers = CreateAssessmentAnswerSerializer(many=True)
 
