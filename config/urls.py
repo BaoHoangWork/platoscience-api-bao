@@ -22,6 +22,7 @@ from apps.users.views.user_view import UserView, LoginView, LogoutView, UpdateUs
 from apps.users.views.email_view import VerifyEmailView, ResendVerificationView, ForgotPasswordView, VerifyForgotPasswordCodeView
 from apps.assessments.views.assessment_view import AssessmentView, LatestAssessmentView, CheckTimeIntervalView
 from apps.assessments.views.question_view import QuestionView
+from apps.assessments.views.assessment_view import SelectProtocolView
 
 api_patterns = [
     path('accounts/', UserView.as_view(), name='account'),
@@ -34,6 +35,7 @@ api_patterns = [
     path('update-password/', UpdateUserPasswordView.as_view(), name='update-password'),
     path('assessments/', AssessmentView.as_view(), name='assessment'),
     path('assessments/latest/', LatestAssessmentView.as_view(), name='latest-assessment'),
+    path('select-protocol/', SelectProtocolView.as_view(), name='select-protocol'),
     path('check-time-interval/', CheckTimeIntervalView.as_view(), name='check-time-interval'),
     path('questions/', QuestionView.as_view(), name='question'),
 ]
