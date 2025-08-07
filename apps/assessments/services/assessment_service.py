@@ -3,6 +3,7 @@ from datetime import timedelta
 from apps.assessments.models.question_model import Question
 from apps.assessments.models.question_option_model import QuestionOption
 from apps.assessments.repositories.assessment_repository import AssessmentRepository
+from apps.assessments.serializers.assessment_serializer import AssessmentSerializer
 from apps.assessments.services.assessment_answer_service import AssessmentAnswerService
 from apps.assessments.services.question_option_service import QuestionOptionService
 from apps.assessments.services.question_service import QuestionService
@@ -21,6 +22,27 @@ class AssessmentService(BaseService):
     def get_latest_by_user(self, user):
         return self.repository.get_latest_by_user(user)
 
+    def end_assessment_period(self):
+        four_weeks_ago = timezone.now() - timedelta(weeks=4)
+        two_weeks_ago = timezone.now() - timedelta(weeks=2)
+        first_result = self.repository.filter(protocol_selected_date__lt=four_weeks_ago,stopped_date__isnull=True)
+        second_result = self.repository.filter(
+            protocol_selected_date__isnull=True,
+            created_at__lt=two_weeks_ago,
+            stopped_date__isnull=True
+        )
+        result = first_result | second_result
+        return result.update(stopped_date=timezone.now())
+    
+    def end_assessment(self, user, reason):
+        latest = self.get_latest_by_user(user)
+        if latest:
+            latest.stopped_date = timezone.now()
+            latest.stop_reason = reason
+            latest.save()
+            return latest
+        return None
+        
     def is_valid_time(self, user):
         latest_assessment = self.repository.model.objects.filter(user=user).order_by('-created_at').first()
         if not latest_assessment:

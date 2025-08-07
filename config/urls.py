@@ -20,7 +20,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from apps.assessments.views.assessment_view import AssessmentView
 from apps.users.views.user_view import UserView, LoginView, LogoutView, UpdateUserPasswordView
 from apps.users.views.email_view import VerifyEmailView, ResendVerificationView, ForgotPasswordView, VerifyForgotPasswordCodeView
-from apps.assessments.views.assessment_view import AssessmentView, LatestAssessmentView, CheckTimeIntervalView
+from apps.assessments.views.assessment_view import AssessmentView, LatestAssessmentView, CheckTimeIntervalView, AssessmentStopView
 from apps.assessments.views.question_view import QuestionView
 from apps.assessments.views.config_view import ConfigView
 
@@ -38,6 +38,7 @@ api_patterns = [
     path('check-time-interval/', CheckTimeIntervalView.as_view(), name='check-time-interval'),
     path('questions/', QuestionView.as_view(), name='question'),
     path('config/', ConfigView.as_view(), name='config'),
+    path('stop-assessment/', AssessmentStopView.as_view(), name='check-stop-assessments')
 ]
 
 urlpatterns = [
