@@ -37,7 +37,7 @@ api_patterns = [
     path('assessments/latest/', LatestAssessmentView.as_view(), name='latest-assessment'),
     path('check-time-interval/', CheckTimeIntervalView.as_view(), name='check-time-interval'),
     path('questions/', QuestionView.as_view(), name='question'),
-    path('health-data/', UserHealthDataView.as_view(), name='health-data')
+    path('health-data/', UserHealthDataView.as_view(), name='health-data'),
     path('stop-assessment/', AssessmentStopView.as_view(), name='check-stop-assessments')
 ]
 
