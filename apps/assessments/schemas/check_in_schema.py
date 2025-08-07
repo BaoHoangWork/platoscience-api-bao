@@ -1,4 +1,110 @@
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
+from apps.assessments.serializers.checkin_history_serializer import CheckInHistoryDaySerializer
+
+checkin_history_schema = extend_schema(
+    summary="Get Check-in History",
+    description="Retrieve all check-in answers for an assessment, grouped by check-in date.",
+    responses={
+        200: OpenApiResponse(
+            description="Check-in history grouped by date",
+            response={
+                "type": "object",
+                "properties": {
+                    "checkin_history": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "date": {"type": "string", "format": "date"},
+                                "answers": {"type": "array", "items": {"$ref": "#/components/schemas/CheckInAnswer"}}
+                            }
+                        }
+                    }
+                }
+            },
+            examples=[
+                OpenApiExample(
+                    "Success Response",
+                    value={
+                        "checkin_history": [
+                            {
+                                "date": "2025-08-08",
+                                "answers": [
+                                    {
+                                        "id": 1,
+                                        "question": {
+                                            "id": 4,
+                                            "name": "daily_mood",
+                                            "content": "How are you feeling today?",
+                                            "description": "Daily mood check-in",
+                                            "category": "checkin",
+                                            "options": [
+                                                {"id": 6, "label": "Very Good", "value": "5"},
+                                                {"id": 7, "label": "Good", "value": "4"},
+                                                {"id": 8, "label": "Neutral", "value": "3"},
+                                                {"id": 9, "label": "Bad", "value": "2"},
+                                                {"id": 10, "label": "Very Bad", "value": "1"}
+                                            ],
+                                            "type": "radio"
+                                        },
+                                        "answer": None,
+                                        "selected_option": {"id": 8, "label": "Neutral", "value": "3"},
+                                        "index": 0
+                                    },
+                                    {
+                                        "id": 2,
+                                        "question": {
+                                            "id": 8,
+                                            "name": "additional_notes",
+                                            "content": "Any additional thoughts or notes for today?",
+                                            "description": "Free text for additional thoughts",
+                                            "category": "checkin",
+                                            "options": [],
+                                            "type": "text"
+                                        },
+                                        "answer": "Feeling okay today, a bit tired but overall fine.",
+                                        "selected_option": None,
+                                        "index": 4
+                                    }
+                                ]
+                            },
+                            {
+                                "date": "2025-08-07",
+                                "answers": [
+                                    {
+                                        "id": 3,
+                                        "question": {
+                                            "id": 4,
+                                            "name": "daily_mood",
+                                            "content": "How are you feeling today?",
+                                            "description": "Daily mood check-in",
+                                            "category": "checkin",
+                                            "options": [
+                                                {"id": 6, "label": "Very Good", "value": "5"},
+                                                {"id": 7, "label": "Good", "value": "4"},
+                                                {"id": 8, "label": "Neutral", "value": "3"},
+                                                {"id": 9, "label": "Bad", "value": "2"},
+                                                {"id": 10, "label": "Very Bad", "value": "1"}
+                                            ],
+                                            "type": "radio"
+                                        },
+                                        "answer": None,
+                                        "selected_option": {"id": 7, "label": "Good", "value": "4"},
+                                        "index": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                )
+            ]
+        ),
+        404: OpenApiResponse(description="Assessment not found or access denied"),
+        401: OpenApiResponse(description="Authentication required"),
+    },
+    tags=["Check-in"]
+)
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
 from apps.assessments.serializers.question_serializer import QuestionSerializer
 from apps.assessments.serializers.assessment_serializer import AssessmentSerializer
 from apps.users.serializers.user_serializer import ErrorResponseSerializer, SuccessMessageSerializer
