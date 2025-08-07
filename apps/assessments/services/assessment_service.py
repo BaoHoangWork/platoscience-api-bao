@@ -52,6 +52,58 @@ class AssessmentService(BaseService):
         is_valid = now >= next_valid_time
         return {"is_valid": is_valid, "next_valid_time": next_valid_time}
 
+    def _calculate_scores(self, answers_data):
+        phq_questions = QuestionService().group_questions_by_category("phq", answers_data)
+        bdi_questions = QuestionService().group_questions_by_category("bdi", answers_data)
+        phq_score = QuestionOptionService().sum_of_values(phq_questions)
+        bdi_score = QuestionOptionService().sum_of_values(bdi_questions)
+        return phq_score, bdi_score
+    
+    def _get_plato_score_and_severity(self, phq_score, bdi_score):
+        url = f"{AI_BASE_URL}/assess/"
+        payload = {
+            "scores": [
+                {"scale": "PHQ-9", "score": phq_score},
+                {"scale": "BDI-II", "score": bdi_score}
+            ]
+        }
+        headers = {'Content-Type': 'application/json'}
+        response = requests.post(url, headers=headers, json=payload)
+        
+        if response.status_code != 200:
+            raise ValueError(f"Validation Error: {response.text}")
+
+        data = response.json()
+        return data.get("plato_score"), data.get("severity_value")
+    
+    def _analyze_depression(self, answers_data):
+        analytic_questions = QuestionService().group_questions_by_category("analytic", answers_data)
+        query = analytic_questions[0]["answer"]
+        
+        url = f"{AI_BASE_URL}/analyze-depression/"
+        payload = {"query": query, "max_tokens": MAX_TOKENS}
+        headers = {'Content-Type': 'application/json'}
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code != 200:
+            raise ValueError(f"Validation Error: {response.text}")
+
+        data = response.json()
+        return data.get("depression_type"), data.get("analysis")
+
+    def _is_reached_limit(self, user):
+        last_four = self.filter(user=user).order_by('-created_at')[:4]
+        if len(last_four) < 4:
+            return False
+        created_time = last_four[3].created_at
+        diff = timezone.now() - created_time 
+        print(diff.total_seconds())
+        if diff.total_seconds() / 60 < 60:
+            return True
+        else:
+            return False
+            
+
     def create_with_answer(self, assessment_data, user):
         """
         Create a new assessment, save answers, calculate scores,
@@ -68,64 +120,27 @@ class AssessmentService(BaseService):
                 "analysis": str
             }
         """
-
+        if self._is_reached_limit(user=user):
+            raise Exception("Error: User reached rate limit.")
+        
         answers_data = assessment_data.pop("answers", [])
-        # Calculate PHQ and BDI scores
-        phq_questions = QuestionService().group_questions_by_category(requested_category="phq", answers_data=answers_data)
-        bdi_questions = QuestionService().group_questions_by_category(requested_category="bdi", answers_data=answers_data)
-        phq_score = QuestionOptionService().sum_of_values(phq_questions)
-        bdi_score = QuestionOptionService().sum_of_values(bdi_questions)
-
-        # Get plato score & severity
-        try:
-            url = f"{AI_BASE_URL}/assess/"
-            payload = {
-                "scores": [
-                    {
-                        "scale": "PHQ-9",
-                        "score": phq_score
-                    },
-                    {
-                        "scale": "BDI-II",
-                        "score": bdi_score
-                    }
-                ]
-            }
-            headers = {'Content-Type': 'application/json'}
-            response = requests.request("POST", url, headers=headers, json=payload)
-            if response.status_code == 200:
-                data = response.json()
-                severity = data.get("severity_value")
-                plato_score = data.get("plato_score")
-            else:
-                raise ValueError(
-                f"Validation Error: {response.text}"
-            )
-        except Exception as e:
-            raise Exception(f"Error retrieving plato_score and severity with score PHQ-9 ({phq_score}) and BDI-II ({bdi_score}): {str(e)}")
-
-        analytic_questions = QuestionService().group_questions_by_category(requested_category="analytic", answers_data=answers_data)
         
+        phq_score, bdi_score = self._calculate_scores(answers_data)
+    
         try:
-            url = f"{AI_BASE_URL}/analyze-depression/"
-            query = analytic_questions[0]["answer"]
-            payload = {
-                "query": query,
-                "max_tokens": MAX_TOKENS,
-            }
-            headers = {'Content-Type': 'application/json'}
-            response = requests.request("POST", url, headers=headers, json=payload)
-            if response.status_code == 200:
-                data = response.json()
-                depression_type = data.get("depression_type")
-                analysis = data.get("analysis")
-            else:
-                raise ValueError(
-                f"Validation Error: {response.text}"
-            )
+            plato_score, severity = self._get_plato_score_and_severity(phq_score, bdi_score)
         except Exception as e:
-            raise Exception(f"Error analyze the depression: {str(e)}")
+            raise Exception(f"Error retrieving plato_score and severity: {str(e)}")
+
+        try:
+            depression_type, analysis = self._analyze_depression(answers_data)
+        except Exception as e:
+            raise Exception(f"Error analyzing depression: {str(e)}")
         
+        record = self.filter(user=user).order_by('-created_at').first()
+        if record:
+            record.stopped_date = timezone.now()
+            record.save()
 
         try:
             with transaction.atomic():
