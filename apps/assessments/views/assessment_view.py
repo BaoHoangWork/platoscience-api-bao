@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from apps.assessments.schemas.assessment_schema import assessment_list_schema, latest_assessment_schema, create_assessment_schema
+from apps.assessments.schemas.assessment_schema import assessment_list_schema, latest_assessment_schema, create_assessment_schema, stop_assessment_schema
 
 class AssessmentView(APIView):
     def __init__(self):
@@ -52,7 +52,7 @@ class AssessmentView(APIView):
                     assessment_data=assessment_serializer.validated_data,
                     user=request.user
                 )
-
+                serializer = AssessmentSerializer(assessment)
                 return Response(
                     {
                         'status': 'success',
@@ -64,7 +64,10 @@ class AssessmentView(APIView):
                     status=status.HTTP_201_CREATED
                 )
             except Exception as e:
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'error': str(e)}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             return Response(
                 {
@@ -120,3 +123,28 @@ class LatestAssessmentView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+class AssessmentStopView(APIView):
+    
+    def __init__(self):
+        self.service = AssessmentService()
+        
+    @stop_assessment_schema
+    def post(self, request):
+        try:
+            user = request.user
+
+            reason = request.data.get('reason')
+            if reason is None:
+                return Response(          
+                    {'error': 'reason is not provided'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            res = self.service.end_assessment(user, reason)
+            serializer = AssessmentSerializer(res)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response(          
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
