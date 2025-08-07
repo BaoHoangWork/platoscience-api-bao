@@ -413,3 +413,51 @@ select_protocol_schema = extend_schema(
     },
     tags=["Assessments"]
 )
+
+stop_assessment_schema = extend_schema(
+    summary="Stop an assessment",
+    description="Stop the latest assessment with a provided stop reason.",
+    tags=["Assessments"],
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "description": "Reason for stopping the assessment"
+                }
+            },
+            "required": ["reason"]
+        }
+    },
+    examples=[
+        OpenApiExample(
+            "Example Request",
+            value={"reason": "User requested stop"},
+            request_only=True
+        ),
+        OpenApiExample(
+            "Success Response",
+            value={
+                "id": 1,
+                "user": 5,
+                "protocol_selected_date": "2025-04-13",
+                "stopped_date": "2025-08-03T12:00:00Z",
+                "stop_reason": "User requested stop",
+            },
+            response_only=True
+        ),
+        OpenApiExample(
+            "Missing Reason",
+            value={"error": "reason is not provided"},
+            response_only=True
+        )
+    ],
+    responses={
+        200: OpenApiResponse(
+            description="Stop assessment successfully",
+        ),
+        401: OpenApiResponse(description="Authentication required"),
+        404: OpenApiResponse(description="No assessment found"),
+    }
+)

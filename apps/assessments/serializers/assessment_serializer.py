@@ -19,6 +19,9 @@ class AssessmentSerializer(serializers.ModelSerializer):
             'severity',
             'answers',
             'suggested_protocols',
+            'protocol_selected_date',
+            'stopped_date',
+            'stop_reason',
             'created_at',
         ]
 
