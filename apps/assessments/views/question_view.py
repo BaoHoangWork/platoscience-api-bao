@@ -70,6 +70,22 @@ class CheckInView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             
+            if not self.assessment_answer_service.can_checkin_today(assessment):
+                return Response(
+                    {'error': 'already checked-in'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            checkin_questions = self.question_service.filter(category='checkin')
+            checkin_question_ids = set(q.id for q in checkin_questions)
+            submitted_question_ids = set(a.get('question_id') for a in answers_data)
+
+            if checkin_question_ids != submitted_question_ids:
+                return Response(
+                    {'error': 'You must submit answers for all check-in questions.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
             checkin_date = timezone.now()
             created_answers = []
             
