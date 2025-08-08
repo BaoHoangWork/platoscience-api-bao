@@ -60,36 +60,45 @@ class AssessmentService(BaseService):
         return phq_score, bdi_score
     
     def _get_plato_score_and_severity(self, phq_score, bdi_score):
-        url = f"{AI_BASE_URL}/assess/"
-        payload = {
-            "scores": [
-                {"scale": "PHQ-9", "score": phq_score},
-                {"scale": "BDI-II", "score": bdi_score}
-            ]
-        }
-        headers = {'Content-Type': 'application/json'}
-        response = requests.post(url, headers=headers, json=payload)
-        
-        if response.status_code != 200:
-            raise ValueError(f"Validation Error: {response.text}")
+        try:
+            url = f"{AI_BASE_URL}/assess/"
+            payload = {
+                "scores": [
+                    {"scale": "PHQ-9", "score": phq_score},
+                    {"scale": "BDI-II", "score": bdi_score}
+                ]
+            }
+            headers = {'Content-Type': 'application/json'}
+            response = requests.post(url, headers=headers, json=payload)
+            
+            if response.status_code != 200:
+                raise ValueError(f"Validation Error: {response.text}")
 
-        data = response.json()
-        return data.get("plato_score"), data.get("severity_value")
+            data = response.json()
+            return data.get("plato_score"), data.get("severity_value")
+        except Exception as e:
+            raise Exception(f"Error retrieving plato_score and severity (PHQ-9: {phq_score}, BDI-II: {bdi_score}): {str(e)}")
+
+        
     
     def _analyze_depression(self, answers_data):
-        analytic_questions = QuestionService().group_questions_by_category("analytic", answers_data)
-        query = analytic_questions[0]["answer"]
+        try:
+            analytic_questions = QuestionService().group_questions_by_category("analytic", answers_data)
+            query = analytic_questions[0]["answer"]
+            
+            url = f"{AI_BASE_URL}/analyze-depression/"
+            payload = {"query": query, "max_tokens": MAX_TOKENS}
+            headers = {'Content-Type': 'application/json'}
+            response = requests.post(url, headers=headers, json=payload)
+
+            if response.status_code != 200:
+                raise ValueError(f"Validation Error: {response.text}")
+
+            data = response.json()
+            return data.get("depression_type"), data.get("analysis")
+        except Exception as e:
+            raise Exception(f"Error analyzing depression: {str(e)}")
         
-        url = f"{AI_BASE_URL}/analyze-depression/"
-        payload = {"query": query, "max_tokens": MAX_TOKENS}
-        headers = {'Content-Type': 'application/json'}
-        response = requests.post(url, headers=headers, json=payload)
-
-        if response.status_code != 200:
-            raise ValueError(f"Validation Error: {response.text}")
-
-        data = response.json()
-        return data.get("depression_type"), data.get("analysis")
 
     def _is_reached_limit(self, user):
         last_four = self.filter(user=user).order_by('-created_at')[:4]
@@ -97,7 +106,6 @@ class AssessmentService(BaseService):
             return False
         created_time = last_four[3].created_at
         diff = timezone.now() - created_time 
-        print(diff.total_seconds())
         if diff.total_seconds() / 60 < 60:
             return True
         else:
@@ -126,16 +134,8 @@ class AssessmentService(BaseService):
         answers_data = assessment_data.pop("answers", [])
         
         phq_score, bdi_score = self._calculate_scores(answers_data)
-    
-        try:
-            plato_score, severity = self._get_plato_score_and_severity(phq_score, bdi_score)
-        except Exception as e:
-            raise Exception(f"Error retrieving plato_score and severity: {str(e)}")
-
-        try:
-            depression_type, analysis = self._analyze_depression(answers_data)
-        except Exception as e:
-            raise Exception(f"Error analyzing depression: {str(e)}")
+        plato_score, severity = self._get_plato_score_and_severity(phq_score, bdi_score)
+        depression_type, analysis = self._analyze_depression(answers_data)
         
         record = self.filter(user=user).order_by('-created_at').first()
         if record:
