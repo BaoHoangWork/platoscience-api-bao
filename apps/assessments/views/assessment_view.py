@@ -1,6 +1,7 @@
 from datetime import timedelta, timezone
 from apps.assessments.serializers.assessment_answer_serializer import AssessmentAnswerSerializer
 from apps.assessments.services.assessment_service import AssessmentService
+from apps.assessments.services.protocol_service import ProtocolService
 from apps.assessments.serializers.assessment_serializer import AssessmentSerializer, CreateAssessmentSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -128,6 +129,7 @@ class SelectProtocolView(APIView):
 
     def __init__(self):
         self.assessment_service = AssessmentService()
+        self.protocol_service = ProtocolService()
 
     @select_protocol_schema
     def post(self, request):
@@ -140,6 +142,13 @@ class SelectProtocolView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+            protocol = self.protocol_service.filter(id=protocol_id).first()
+            if not protocol:
+                return Response(
+                    {'error': f'Protocol with id {protocol_id} not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
             latest_assessment = self.assessment_service.get_latest_by_user(request.user)
             if not latest_assessment:
                 return Response(
@@ -147,45 +156,9 @@ class SelectProtocolView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
 
-            if not latest_assessment.suggested_protocols.exists():
-                return Response(
-                    {'error': 'No suggested protocols found for this assessment'}, 
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
-            suggested_protocol = latest_assessment.suggested_protocols.first()
-
-            # Check if the provided protocol_id is one of the suggested protocols
-            valid_protocol_ids = []
-            selected_protocol = None
-
-            if suggested_protocol.first_protocol and suggested_protocol.first_protocol.id == protocol_id:
-                selected_protocol = suggested_protocol.first_protocol
-            elif suggested_protocol.second_protocol and suggested_protocol.second_protocol.id == protocol_id:
-                selected_protocol = suggested_protocol.second_protocol  
-            elif suggested_protocol.third_protocol and suggested_protocol.third_protocol.id == protocol_id:
-                selected_protocol = suggested_protocol.third_protocol
-
-            if not selected_protocol:
-                # Build list of valid protocol IDs for error message
-                if suggested_protocol.first_protocol:
-                    valid_protocol_ids.append(suggested_protocol.first_protocol.id)
-                if suggested_protocol.second_protocol:
-                    valid_protocol_ids.append(suggested_protocol.second_protocol.id)
-                if suggested_protocol.third_protocol:
-                    valid_protocol_ids.append(suggested_protocol.third_protocol.id)
-
-                return Response(
-                    {
-                        'error': f'Invalid protocol selection. You can only choose from suggested protocols: {valid_protocol_ids}',
-                        'valid_protocol_ids': valid_protocol_ids
-                    }, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
             updated_assessment = self.assessment_service.update(
                 latest_assessment.id, 
-                protocol=selected_protocol
+                protocol=protocol
             )
 
             serializer = AssessmentSerializer(updated_assessment)

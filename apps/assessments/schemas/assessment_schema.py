@@ -300,7 +300,7 @@ latest_assessment_schema = extend_schema(
 )
 
 select_protocol_schema = extend_schema(
-    summary="Select Protocol from Suggested Protocols",
+    summary="Select Protocol for latest assessment",
     description="Update the user's latest assessment with one of the suggested protocols.",
     request={
         'application/json': {
@@ -308,7 +308,7 @@ select_protocol_schema = extend_schema(
             'properties': {
                 'protocolId': {
                     'type': 'integer',
-                    'description': 'ID of one of the suggested protocols to select'
+                    'description': 'ID of the protocol'
                 }
             },
             'required': ['protocolId']
