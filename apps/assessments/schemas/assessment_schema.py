@@ -302,6 +302,121 @@ latest_assessment_schema = extend_schema(
     },
 )
 
+select_protocol_schema = extend_schema(
+    summary="Select Protocol for latest assessment",
+    description="Update the user's latest assessment with one of the suggested protocols.",
+    request={
+        'application/json': {
+            'type': 'object',
+            'properties': {
+                'protocolId': {
+                    'type': 'integer',
+                    'description': 'ID of the protocol'
+                }
+            },
+            'required': ['protocolId']
+        }
+    },
+    examples=[
+        OpenApiExample(
+            'Example Request',
+            value={
+                "protocolId": 2
+            },
+            request_only=True,
+        )
+    ],
+    responses={
+        200: OpenApiResponse(
+            description="Protocol selected successfully",
+            response=AssessmentSerializer(),
+            examples=[
+                OpenApiExample(
+                    "Success Response",
+                    value={
+                        "id": 1,
+                        "phq_score": 15,
+                        "bdi_score": 30,
+                        "plato_score": 3.5,
+                        "protocol": {
+                            "id": 2,
+                            "intensity": "Medium",
+                            "duration": "20 mins",
+                            "node_placement": "Chest",
+                            "node_type": "Type B",
+                            "node_size": "Medium"
+                        },
+                        "severity": 2,
+                        "answers": [],
+                        "suggested_protocols": [
+                            {
+                                "id": 1,
+                                "first_protocol": {
+                                    "id": 1,
+                                    "intensity": "High",
+                                    "duration": "30 mins",
+                                    "node_placement": "Head",
+                                    "node_type": "Type A",
+                                    "node_size": "Large"
+                                },
+                                "second_protocol": {
+                                    "id": 2,
+                                    "intensity": "Medium",
+                                    "duration": "20 mins",
+                                    "node_placement": "Chest",
+                                    "node_type": "Type B",
+                                    "node_size": "Medium"
+                                },
+                                "third_protocol": {
+                                    "id": 3,
+                                    "intensity": "Low",
+                                    "duration": "15 mins",
+                                    "node_placement": "Forehead",
+                                    "node_type": "Type C",
+                                    "node_size": "Small"
+                                }
+                            }
+                        ],
+                        "created_at": "2025-08-04T16:43:06.802369Z"
+                    }
+                )
+            ]
+        ),
+        400: OpenApiResponse(
+            description="Bad Request - protocolId is required or invalid protocol selection",
+            examples=[
+                OpenApiExample(
+                    "Missing protocolId",
+                    value={"error": "protocolId is required"}
+                ),
+                OpenApiExample(
+                    "Invalid protocol selection",
+                    value={
+                        "error": "Invalid protocol selection. You can only choose from suggested protocols: [1, 2, 3]",
+                        "valid_protocol_ids": [1, 2, 3]
+                    }
+                )
+            ]
+        ),
+        404: OpenApiResponse(
+            description="Not Found - No assessment or suggested protocols found",
+            examples=[
+                OpenApiExample(
+                    "No assessment found",
+                    value={"error": "No assessment found for user"}
+                ),
+                OpenApiExample(
+                    "No suggested protocols",
+                    value={"error": "No suggested protocols found for this assessment"}
+                )
+            ]
+        ),
+        401: OpenApiResponse(description="Authentication required"),
+        500: OpenApiResponse(description="Internal server error")
+    },
+    tags=["Assessments"]
+)
+
 stop_assessment_schema = extend_schema(
     summary="Stop an assessment",
     description="Stop the latest assessment with a provided stop reason.",
@@ -349,4 +464,3 @@ stop_assessment_schema = extend_schema(
         404: OpenApiResponse(description="No assessment found"),
     }
 )
-

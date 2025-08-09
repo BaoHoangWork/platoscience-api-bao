@@ -1,12 +1,13 @@
 from datetime import timedelta, timezone
 from apps.assessments.serializers.assessment_answer_serializer import AssessmentAnswerSerializer
 from apps.assessments.services.assessment_service import AssessmentService
+from apps.assessments.services.protocol_service import ProtocolService
 from apps.assessments.serializers.assessment_serializer import AssessmentSerializer, CreateAssessmentSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from apps.assessments.schemas.assessment_schema import assessment_list_schema, latest_assessment_schema, create_assessment_schema, stop_assessment_schema
+from apps.assessments.schemas.assessment_schema import assessment_list_schema, latest_assessment_schema, create_assessment_schema, select_protocol_schema, stop_assessment_schema
 
 class AssessmentView(APIView):
     def __init__(self):
@@ -119,6 +120,52 @@ class LatestAssessmentView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class SelectProtocolView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def __init__(self):
+        self.assessment_service = AssessmentService()
+        self.protocol_service = ProtocolService()
+
+    @select_protocol_schema
+    def post(self, request):
+        try:
+            protocol_id = request.data.get('protocolId')
+
+            if not protocol_id:
+                return Response(
+                    {'error': 'protocolId is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            protocol = self.protocol_service.filter(id=protocol_id).first()
+            if not protocol:
+                return Response(
+                    {'error': f'Protocol with id {protocol_id} not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            latest_assessment = self.assessment_service.get_latest_by_user(request.user)
+            if not latest_assessment:
+                return Response(
+                    {'error': 'No assessment found for user'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            updated_assessment = self.assessment_service.update(
+                latest_assessment.id, 
+                protocol=protocol
+            )
+
+            serializer = AssessmentSerializer(updated_assessment)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )        
 
 class AssessmentStopView(APIView):
     
