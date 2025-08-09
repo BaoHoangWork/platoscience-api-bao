@@ -11,6 +11,8 @@ class Question(models.Model):
         ('phq9', 'PHQ'),
         ('bdi', 'BDI'),
         ('normal', 'Normal'),
+        ('analytic', 'Analytic'),
+        ('check-in', 'Check-in')
     ]
     
     name = models.CharField(max_length=255, unique=True)
