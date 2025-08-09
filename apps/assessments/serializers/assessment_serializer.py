@@ -24,6 +24,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
             'stop_reason',
             'created_at',
         ]
+        
 
 class CreateAssessmentSerializer(serializers.ModelSerializer):
     answers = CreateAssessmentAnswerSerializer(many=True)
