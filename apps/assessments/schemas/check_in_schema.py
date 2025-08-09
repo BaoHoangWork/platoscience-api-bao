@@ -1,5 +1,6 @@
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
-from apps.assessments.serializers.checkin_history_serializer import CheckInHistoryDaySerializer
+from apps.assessments.serializers.question_serializer import QuestionSerializer
+from apps.users.serializers.user_serializer import ErrorResponseSerializer
 
 checkin_history_schema = extend_schema(
     summary="Get Check-in History",
@@ -104,10 +105,6 @@ checkin_history_schema = extend_schema(
     },
     tags=["Check-in"]
 )
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
-from apps.assessments.serializers.question_serializer import QuestionSerializer
-from apps.assessments.serializers.assessment_serializer import AssessmentSerializer
-from apps.users.serializers.user_serializer import ErrorResponseSerializer, SuccessMessageSerializer
 
 checkin_questions_schema = extend_schema(
     summary="Get Check-in Questions",

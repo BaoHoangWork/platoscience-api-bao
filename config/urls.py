@@ -20,8 +20,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from apps.assessments.views.assessment_view import AssessmentView
 from apps.users.views.user_view import UserView, LoginView, LogoutView, UpdateUserPasswordView
 from apps.users.views.email_view import VerifyEmailView, ResendVerificationView, ForgotPasswordView, VerifyForgotPasswordCodeView
-from apps.assessments.views.question_view import QuestionView, CheckInView, CheckInQuestionsView
-from apps.assessments.views.checkin_history_view import CheckInHistoryView
+from apps.assessments.views.question_view import QuestionView
+from apps.assessments.views.checkin_view import CheckInHistoryView, CheckInView, CheckInQuestionsView
 from apps.assessments.views.assessment_view import AssessmentView, LatestAssessmentView, CheckTimeIntervalView, AssessmentStopView
 
 api_patterns = [

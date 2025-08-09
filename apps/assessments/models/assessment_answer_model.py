@@ -8,7 +8,5 @@ class AssessmentAnswer(models.Model):
     answer = models.TextField(null=True, blank=True)
     selected_option = models.ForeignKey(QuestionOption, on_delete=models.SET_NULL, blank=True, null=True, related_name='option')
     index = models.IntegerField()
-    is_checkin = models.BooleanField(default=False)
-    checkin_date = models.DateTimeField(null=True, blank=True)
     class Meta:
         db_table = 'assessments_assessment_answer'
