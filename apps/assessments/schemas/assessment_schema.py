@@ -122,7 +122,7 @@ create_assessment_schema = extend_schema(
                     },
                     {
                     "question": 11,
-                    "answer": "The individual experiences persistent low mood, fatigue, and a lack of motivation. They report difficulty concentrating, disrupted sleep patterns, and irregular eating habits. Although still able to function in daily life, tasks feel overwhelmingly difficult and emotionally draining. There is significant social withdrawal, feelings of guilt, and recurring intrusive thoughts that contribute to a sense of hopelessness. Emotional numbness alternates with unpredictable episodes of sadness or anxiety. Despite outwardly appearing functional, the internal distress is constant and exhausting.",
+                    "answer": "I wake up tired, even after sleeping. Everything feels heavy — getting out of bed, brushing my teeth, replying to a message. I'm constantly drained, like my battery’s always at 10%. I go through the day pretending I’m okay, but inside I feel numb or low. Sometimes I cry for no reason, other times I feel nothing at all. I avoid people, but being alone makes me feel worse. There's guilt, like I'm failing at life, and a quiet voice that keeps asking, what’s the point?",
                     "selected_option": None,
                     "index": 3
                     }
@@ -273,6 +273,9 @@ create_assessment_schema = extend_schema(
                             }
                             ],
                             "suggested_protocols": [],
+                            "protocol_selected_date": None,
+                            "stopped_date": None,
+                            "stop_reason": None,
                             "created_at": "2025-08-01T11:15:43.240486Z"
                         }
                     }
