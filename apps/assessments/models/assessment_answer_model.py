@@ -8,6 +8,5 @@ class AssessmentAnswer(models.Model):
     answer = models.TextField(null=True, blank=True)
     selected_option = models.ForeignKey(QuestionOption, on_delete=models.SET_NULL, blank=True, null=True, related_name='option')
     index = models.IntegerField()
-
     class Meta:
         db_table = 'assessments_assessment_answer'
