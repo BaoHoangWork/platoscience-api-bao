@@ -464,3 +464,66 @@ stop_assessment_schema = extend_schema(
         404: OpenApiResponse(description="No assessment found"),
     }
 )
+
+can_assess_schema = extend_schema(
+    summary="Check current reassessment status",
+    description="Check if user is allowed to reassess and if not, return the remain time.",
+    tags=["Assessments"],
+    responses={
+        200: OpenApiResponse(
+            description="Return reassessment state successfully",
+            response={
+                "type": "object",
+                "properties": {
+                    "isAllowed": {"type": "boolean"},
+                    "remainTime": {"type": "int"},
+                    "error": {"type": "string"}
+                }
+            },
+            examples=[
+                OpenApiExample(
+                    'Example Response',
+                    value={
+                        "isAllowed": True,
+                        "remainTime": None
+                    },
+                    response_only=True,
+                    status_codes=['200']
+                ),
+                OpenApiExample(
+                    'Example Response (blocked)',
+                    value={
+                        "isAllowed": False,
+                        "remainTime": 86400  
+                    },
+                    response_only=True,
+                    status_codes=['200']
+                )
+            ]
+        ),
+        401: OpenApiResponse(description="Authentication required"),
+        403: OpenApiResponse(
+            description="Forbiden due to active assessment",
+            response={
+                "type": "object",
+                "properties": {
+                    "isAllowed": {"type": "boolean"},
+                    "remainTime": {"type": "int"},
+                    "error": {"type": "string"}
+                }
+            },
+            examples=[
+                OpenApiExample(
+                    'Example Response',
+                    value={
+                        'isAllowed': False,
+                        'remainTime': None,
+                        'error': 'You cannot create a new assessment with an active assessment.'
+                    },
+                    response_only=True,
+                    status_codes=['403']
+                )
+            ]
+        ),
+    }
+)
