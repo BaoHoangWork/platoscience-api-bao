@@ -1,14 +1,13 @@
 from datetime import timedelta, timezone
 from apps.assessments.serializers.assessment_answer_serializer import AssessmentAnswerSerializer
-from apps.assessments.serializers.suggested_protocol_serializer import SuggestedProtocolSerializer
-from apps.assessments.services.assessment_answer_service import AssessmentAnswerService
 from apps.assessments.services.assessment_service import AssessmentService
-from apps.assessments.serializers.assessment_serializer import AssessmentSerializer
+from apps.assessments.services.protocol_service import ProtocolService
+from apps.assessments.serializers.assessment_serializer import AssessmentSerializer, CreateAssessmentSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from apps.assessments.schemas.assessment_schema import assessment_list_schema, latest_assessment_schema, create_assessment_schema
+from apps.assessments.schemas.assessment_schema import assessment_list_schema, latest_assessment_schema, create_assessment_schema, select_protocol_schema, stop_assessment_schema
 
 class AssessmentView(APIView):
     def __init__(self):
@@ -46,36 +45,32 @@ class AssessmentView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        answer_serializer = AssessmentAnswerSerializer(data=request.data.get("answer", []), many=True)
-        suggested_protocol_serializer = SuggestedProtocolSerializer(data=request.data.get("suggested_protocol", []))
-        assessment_serializer = AssessmentSerializer(data=request.data)
-        if assessment_serializer.is_valid() and answer_serializer.is_valid() and suggested_protocol_serializer.is_valid():
+        assessment_serializer = CreateAssessmentSerializer(data=request.data)
+
+        if assessment_serializer.is_valid():
             try:
-                assessment = AssessmentService().create_with_answer_protocol(
+                assessment = AssessmentService().create_with_answer(
                     assessment_data=assessment_serializer.validated_data,
-                    answers_data=answer_serializer.validated_data,
-                    suggested_protocol_data=suggested_protocol_serializer.validated_data,
+                    user=request.user
                 )
+
                 return Response(
                     {
                         'status': 'success',
                         'message': 'Asessment created successfully',
-                        'assessment': assessment.id
+                        "depression_type": assessment["depression_type"],
+                        "analysis": assessment["analysis"],
+                        'assessment': AssessmentSerializer(assessment["assessment"]).data,
                     }, 
                     status=status.HTTP_201_CREATED
                 )
             except Exception as e:
-                return Response(
-                    {'error': str(e)}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(
                 {
                     "errors": {
                         "assessment": assessment_serializer.errors,
-                        "answers": answer_serializer.errors,
-                        "suggested_protocol": suggested_protocol_serializer.errors
                     }
                 },
                 status=status.HTTP_400_BAD_REQUEST
@@ -126,3 +121,74 @@ class LatestAssessmentView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+class SelectProtocolView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def __init__(self):
+        self.assessment_service = AssessmentService()
+        self.protocol_service = ProtocolService()
+
+    @select_protocol_schema
+    def post(self, request):
+        try:
+            protocol_id = request.data.get('protocolId')
+
+            if not protocol_id:
+                return Response(
+                    {'error': 'protocolId is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            protocol = self.protocol_service.filter(id=protocol_id).first()
+            if not protocol:
+                return Response(
+                    {'error': f'Protocol with id {protocol_id} not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            latest_assessment = self.assessment_service.get_latest_by_user(request.user)
+            if not latest_assessment:
+                return Response(
+                    {'error': 'No assessment found for user'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            updated_assessment = self.assessment_service.update(
+                latest_assessment.id, 
+                protocol=protocol
+            )
+
+            serializer = AssessmentSerializer(updated_assessment)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )        
+
+class AssessmentStopView(APIView):
+    
+    def __init__(self):
+        self.service = AssessmentService()
+        
+    @stop_assessment_schema
+    def post(self, request):
+        try:
+            user = request.user
+
+            reason = request.data.get('reason')
+            if reason is None:
+                return Response(          
+                    {'error': 'reason is not provided'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            res = self.service.end_assessment(user, reason)
+            serializer = AssessmentSerializer(res)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response(          
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

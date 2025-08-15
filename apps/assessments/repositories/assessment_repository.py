@@ -6,7 +6,7 @@ class AssessmentRepository(BaseRepository):
         super().__init__(Assessment)
 
     def get_all_by_user(self, user):
-        return self.filter(user=user).select_related('user', 'protocol').prefetch_related('answers', 'suggested_protocols')
+        return self.filter(user=user).select_related('user', 'protocol').prefetch_related('answers', 'answers__selected_option', 'suggested_protocols')
     
     def get_latest_by_user(self, user):
         return (self.filter(user=user)

@@ -5,7 +5,8 @@ from apps.users.services.user_service import UserService
 from rest_framework.permissions import IsAuthenticated
 from apps.users.schemas.user_schemas import user_create_schema, login_schema, logout_schema, update_user_password_schema
 from apps.users.serializers.user_serializer import UserSerializer, UpdatePasswordSerializer, LoginSerializer
-
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import authentication_classes, permission_classes
 class UserView(APIView):
      
     def get_permissions(self):
@@ -58,8 +59,10 @@ class UserView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+@permission_classes([])
+@authentication_classes([])
 class LoginView(APIView):
-
+    
     @login_schema
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
@@ -78,6 +81,13 @@ class LoginView(APIView):
             response.set_cookie(
                 key='access_token',
                 value=tokens['access'],
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+            )
+            response.set_cookie(
+                key="refresh_token",
+                value=tokens['refresh'],
                 httponly=True,
                 secure=True,
                 samesite='Lax',
