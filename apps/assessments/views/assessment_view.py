@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from apps.assessments.schemas.assessment_schema import assessment_list_schema, latest_assessment_schema, create_assessment_schema, select_protocol_schema, stop_assessment_schema, can_assess_schema
 from apps.common.throttle import LimitAssessThrottle
+from rest_framework.decorators import authentication_classes, permission_classes
 
 class AssessmentView(APIView):
     throttle_classes = [LimitAssessThrottle]
@@ -219,4 +220,23 @@ class CanAssessView(APIView):
             return Response(          
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            ) 
+            )
+            
+@permission_classes([])
+@authentication_classes([]) 
+class StopAssessmentPeriod(APIView):
+    def __init__(self):
+        self.service = AssessmentService()
+        
+    def get(self, request):
+        try:
+            updated_count = self.service.end_assessment_period()
+            return Response(
+                {"status": "success", "message": f"Stopped {updated_count} assessments."},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
