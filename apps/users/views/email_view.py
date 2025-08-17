@@ -6,8 +6,11 @@ from apps.users.services.email_service import EmailService
 from apps.users.services.user_service import UserService
 from apps.users.serializers.user_serializer import UpdatePasswordSerializer
 from apps.users.views.user_view import UpdateUserPasswordView
-
+from rest_framework.decorators import authentication_classes, permission_classes
 from apps.users.schemas.email_schemas import verify_email_schema, resend_verification_schema, verify_forgot_pwd_code_schema, forgot_password_schema
+
+@permission_classes([])
+@authentication_classes([])
 class VerifyEmailView(APIView):
 
     @verify_email_schema
@@ -42,7 +45,10 @@ class VerifyEmailView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+            
+
+@permission_classes([])
+@authentication_classes([])        
 class ResendVerificationView(APIView):
     
     @resend_verification_schema
