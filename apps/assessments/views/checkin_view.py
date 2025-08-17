@@ -107,7 +107,7 @@ class CheckInView(APIView):
                         status=status.HTTP_404_NOT_FOUND
                     )
 
-                if question.category != 'checkin':
+                if question.category != 'check-in':
                     return Response(
                         {'error': f'Question {question_id} is not a check-in question'},
                         status=status.HTTP_400_BAD_REQUEST
