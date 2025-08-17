@@ -24,7 +24,7 @@ from apps.users.views.email_view import VerifyEmailView, ResendVerificationView,
 from apps.assessments.views.question_view import QuestionView
 from apps.assessments.views.config_view import ConfigView
 from apps.assessments.views.checkin_view import CheckInHistoryView, CheckInView, CheckInQuestionsView
-from apps.assessments.views.assessment_view import AssessmentView, LatestAssessmentView, CheckTimeIntervalView, AssessmentStopView, SelectProtocolView, CanAssessView
+from apps.assessments.views.assessment_view import AssessmentView, LatestAssessmentView, CheckTimeIntervalView, AssessmentStopView, SelectProtocolView, CanAssessView, StopAssessmentPeriod
 
 api_patterns = [
     path('accounts/', UserView.as_view(), name='account'),
@@ -48,6 +48,7 @@ api_patterns = [
     path('health-data/', UserHealthDataView.as_view(), name='health-data'),
     path('stop-assessment/', AssessmentStopView.as_view(), name='check-stop-assessments'),
     path('can-assess/', CanAssessView.as_view(), name='check-can-assess'),
+    path('check-and-stop/', StopAssessmentPeriod.as_view(), name='stop')
 ]
 
 urlpatterns = [
