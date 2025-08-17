@@ -34,7 +34,7 @@ class EmailService:
         send_mail(
             subject=subject,
             message=message,
-            from_email='noreply@rtech.live',
+            from_email='hello@rtech.live',
             recipient_list=[user.email],
             fail_silently=False,
         )
