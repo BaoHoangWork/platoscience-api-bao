@@ -7,6 +7,7 @@ from apps.assessments.serializers.assessment_serializer import AssessmentSeriali
 from apps.assessments.services.assessment_answer_service import AssessmentAnswerService
 from apps.assessments.services.question_option_service import QuestionOptionService
 from apps.assessments.services.question_service import QuestionService
+from apps.notifications.models import Notification
 from apps.common.base_service import BaseService
 from django.db import transaction
 import requests
@@ -32,6 +33,12 @@ class AssessmentService(BaseService):
             stopped_date__isnull=True
         )
         result = first_result | second_result
+        for assessment in result:
+            Notification.objects.create(
+                user=assessment.user,
+                title="Assessment notification",
+                description="Your current assessment has ended."
+            )
         return result.update(stopped_date=timezone.now())
     
     def end_assessment(self, user, reason):
