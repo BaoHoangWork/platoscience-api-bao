@@ -7,9 +7,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from apps.assessments.schemas.assessment_schema import assessment_list_schema, latest_assessment_schema, create_assessment_schema, select_protocol_schema, stop_assessment_schema
+from apps.assessments.schemas.assessment_schema import assessment_list_schema, latest_assessment_schema, create_assessment_schema, select_protocol_schema, stop_assessment_schema, can_assess_schema
+from apps.common.throttle import LimitAssessThrottle
+from rest_framework.decorators import authentication_classes, permission_classes
 
 class AssessmentView(APIView):
+    throttle_classes = [LimitAssessThrottle]
+    
     def __init__(self):
         self.service = AssessmentService()
 
@@ -35,16 +39,15 @@ class AssessmentView(APIView):
     
     @create_assessment_schema
     def post(self, request):
-        check = self.service.is_valid_time(request.user)
-        if not check["is_valid"]:
+        check = self.service.is_stopped(request.user)
+        if not check:
             return Response(
                 {
-                    'error': 'You can only create a new assessment after 4 weeks from the last one.',
-                    "next_valid_time": check['next_valid_time']
+                    'error': 'You cannot create a new assessment with an active assessment.'
                 },
                 status=status.HTTP_403_FORBIDDEN
             )
-
+        self.check_throttles(request)
         assessment_serializer = CreateAssessmentSerializer(data=request.data)
 
         if assessment_serializer.is_valid():
@@ -190,5 +193,50 @@ class AssessmentStopView(APIView):
         except Exception as e:
             return Response(          
                 {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+class CanAssessView(APIView):
+    @can_assess_schema
+    def get(self, request):
+        try:
+            check = AssessmentService().is_stopped(request.user)
+            if not check:
+                return Response(
+                    {
+                        'isAllowed': False,
+                        'remainTime': None,
+                        'error': 'You cannot create a new assessment with an active assessment.'
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            is_allowed, wait = LimitAssessThrottle().get_current_state(request, self)
+            return Response(
+                {
+                    'isAllowed': is_allowed,
+                    'remainTime': wait,
+                }
+            )
+        except Exception as e:
+            return Response(          
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+@permission_classes([])
+@authentication_classes([]) 
+class StopAssessmentPeriod(APIView):
+    def __init__(self):
+        self.service = AssessmentService()
+        
+    def get(self, request):
+        try:
+            updated_count = self.service.end_assessment_period()
+            return Response(
+                {"status": "success", "message": f"Stopped {updated_count} assessments."},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

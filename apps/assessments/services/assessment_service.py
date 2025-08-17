@@ -7,10 +7,11 @@ from apps.assessments.serializers.assessment_serializer import AssessmentSeriali
 from apps.assessments.services.assessment_answer_service import AssessmentAnswerService
 from apps.assessments.services.question_option_service import QuestionOptionService
 from apps.assessments.services.question_service import QuestionService
+from apps.notifications.models import Notification
 from apps.common.base_service import BaseService
 from django.db import transaction
 import requests
-from apps.common.constants import ASSESSMENT_INTERVAL, AI_BASE_URL, MAX_TOKENS
+from apps.common.constants import AI_BASE_URL, MAX_TOKENS
 
 class AssessmentService(BaseService):
     def __init__(self):
@@ -32,6 +33,12 @@ class AssessmentService(BaseService):
             stopped_date__isnull=True
         )
         result = first_result | second_result
+        for assessment in result:
+            Notification.objects.create(
+                user=assessment.user,
+                title="Assessment notification",
+                description="Your current assessment has ended."
+            )
         return result.update(stopped_date=timezone.now())
     
     def end_assessment(self, user, reason):
@@ -43,14 +50,12 @@ class AssessmentService(BaseService):
             return latest
         return None
         
-    def is_valid_time(self, user):
-        latest_assessment = self.repository.model.objects.filter(user=user).order_by('-created_at').first()
+    def is_stopped(self, user):
+        latest_assessment = self.repository.filter(user=user).order_by('-created_at').first()
         if not latest_assessment:
-            return {"is_valid":True, "next_valid_time": None}  
-        now = timezone.now()
-        next_valid_time = latest_assessment.created_at + timedelta(seconds=ASSESSMENT_INTERVAL)
-        is_valid = now >= next_valid_time
-        return {"is_valid": is_valid, "next_valid_time": next_valid_time}
+            return True
+        return latest_assessment.stopped_date is not None
+
 
     def _calculate_scores(self, answers_data):
         phq_questions = QuestionService().group_questions_by_category("phq", answers_data)
@@ -98,20 +103,7 @@ class AssessmentService(BaseService):
             return data.get("depression_type"), data.get("analysis")
         except Exception as e:
             raise Exception(f"Error analyzing depression: {str(e)}")
-        
-
-    def _is_reached_limit(self, user):
-        last_four = self.filter(user=user).order_by('-created_at')[:4]
-        if len(last_four) < 4:
-            return False
-        created_time = last_four[3].created_at
-        diff = timezone.now() - created_time 
-        if diff.total_seconds() / 60 < 60:
-            return True
-        else:
-            return False
             
-
     def create_with_answer(self, assessment_data, user):
         """
         Create a new assessment, save answers, calculate scores,
@@ -128,9 +120,6 @@ class AssessmentService(BaseService):
                 "analysis": str
             }
         """
-        if self._is_reached_limit(user=user):
-            raise Exception("Error: User reached rate limit.")
-        
         answers_data = assessment_data.pop("answers", [])
         
         phq_score, bdi_score = self._calculate_scores(answers_data)
